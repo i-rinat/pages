@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Code</title>
+</head>
+<body>
+    <script>
+        function toggle(id) {
+            var elem = document.querySelector('#' + id);
+            console.log(elem.style.display);
+            if (elem.style.display != 'none') {
+                elem.style.display = 'none';
+            } else {
+                elem.style.display = '';
+            }
+        }
+    </script>
+
+    <button onclick="do_format();">do format</button>
+    <br>
+
+    <table><tr><td>
+    <fieldset>
+        <legend>
+            <a href="#" onclick="toggle('style_text_wrapper');">.clang_format</a>
+        </legend>
+        <div id="style_text_wrapper">
+            <textarea rows="10" cols="80" id="style_text" autocomplete="off" autocorrect="off"
+                      autocapitalize="off" spellcheck="false"></textarea>
+        </div>
+    </fieldset>
+
+    </td><td>
+
+    <fieldset>
+        <legend>file</legend>
+        <textarea rows="10" cols="100" id="content_text" autocomplete="off" autocorrect="off"
+                  autocapitalize="off" spellcheck="false"></textarea>
+    </fieldset>
+
+    </td></tr></table>
+
+    <script>
+
+
+        var style_text = document.querySelector('#style_text');
+        var content_text = document.querySelector('#content_text');
+
+        var Module = {
+            noInitialRun: true,
+            noExitRuntime: true,
+        };
+
+    </script>
+    <script src="cf.js"></script>
+    <script>
+        function do_format() {
+            var style_text = document.querySelector('#style_text');
+            var content_text = document.querySelector('#content_text');
+            content_text.value =
+                Module.clang_format_string(style_text.value, content_text.value);
+        }
+
+        (function () {
+            var style_text = document.querySelector('#style_text');
+            var content_text = document.querySelector('#content_text');
+
+            style_text.value = localStorage.getItem("style_text");
+            content_text.value = localStorage.getItem("content_text");
+
+            style_text.onchange = (function() {
+                localStorage.setItem("style_text", style_text.value);
+            });
+
+            content_text.onchange = (function () {
+                localStorage.setItem("content_text", content_text.value);
+            });
+        })();
+
+    </script>
+</body>
+</html>
