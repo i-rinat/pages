@@ -1,0 +1,766 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Clang-Format Style Options &mdash; Clang 4.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '4.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Clang 4.0 documentation" href="index.html" />
+    <link rel="next" title="“Clang” CFE Internals Manual" href="InternalsManual.html" />
+    <link rel="prev" title="ClangFormat" href="ClangFormat.html" /> 
+  </head>
+  <body role="document">
+      <div class="header" role="banner"><h1 class="heading"><a href="index.html">
+          <span>Clang 4.0 documentation</span></a></h1>
+        <h2 class="heading"><span>Clang-Format Style Options</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="ClangFormat.html">ClangFormat</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="InternalsManual.html">&#8220;Clang&#8221; CFE Internals Manual</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="clang-format-style-options">
+<h1>Clang-Format Style Options<a class="headerlink" href="#clang-format-style-options" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference internal" href="#"><span class="doc">Clang-Format Style Options</span></a> describes configurable formatting style options
+supported by <a class="reference internal" href="LibFormat.html"><span class="doc">LibFormat</span></a> and <a class="reference internal" href="ClangFormat.html"><span class="doc">ClangFormat</span></a>.</p>
+<p>When using <strong class="program">clang-format</strong> command line utility or
+<code class="docutils literal"><span class="pre">clang::format::reformat(...)</span></code> functions from code, one can either use one of
+the predefined styles (LLVM, Google, Chromium, Mozilla, WebKit) or create a
+custom style by configuring specific style options.</p>
+<div class="section" id="configuring-style-with-clang-format">
+<h2>Configuring Style with clang-format<a class="headerlink" href="#configuring-style-with-clang-format" title="Permalink to this headline">¶</a></h2>
+<p><strong class="program">clang-format</strong> supports two ways to provide custom style options:
+directly specify style configuration in the <code class="docutils literal"><span class="pre">-style=</span></code> command line option or
+use <code class="docutils literal"><span class="pre">-style=file</span></code> and put style configuration in the <code class="docutils literal"><span class="pre">.clang-format</span></code> or
+<code class="docutils literal"><span class="pre">_clang-format</span></code> file in the project directory.</p>
+<p>When using <code class="docutils literal"><span class="pre">-style=file</span></code>, <strong class="program">clang-format</strong> for each input file will
+try to find the <code class="docutils literal"><span class="pre">.clang-format</span></code> file located in the closest parent directory
+of the input file. When the standard input is used, the search is started from
+the current directory.</p>
+<p>The <code class="docutils literal"><span class="pre">.clang-format</span></code> file uses YAML format:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">key1</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">value1</span>
+<span class="l l-Scalar l-Scalar-Plain">key2</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">value2</span>
+<span class="c1"># A comment.</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+<p>The configuration file can consist of several sections each having different
+<code class="docutils literal"><span class="pre">Language:</span></code> parameter denoting the programming language this section of the
+configuration is targeted at. See the description of the <strong>Language</strong> option
+below for the list of supported languages. The first section may have no
+language set, it will set the default style options for all lanugages.
+Configuration sections for specific language will override options set in the
+default section.</p>
+<p>When <strong class="program">clang-format</strong> formats a file, it auto-detects the language using
+the file name. When formatting standard input or a file that doesn&#8217;t have the
+extension corresponding to its language, <code class="docutils literal"><span class="pre">-assume-filename=</span></code> option can be
+used to override the file name <strong class="program">clang-format</strong> uses to detect the
+language.</p>
+<p>An example of a configuration file for multiple languages:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="nn">---</span>
+<span class="c1"># We&#39;ll use defaults from the LLVM style, but with 4 columns indentation.</span>
+<span class="l l-Scalar l-Scalar-Plain">BasedOnStyle</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">LLVM</span>
+<span class="l l-Scalar l-Scalar-Plain">IndentWidth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">4</span>
+<span class="nn">---</span>
+<span class="l l-Scalar l-Scalar-Plain">Language</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Cpp</span>
+<span class="c1"># Force pointers to the type for C++.</span>
+<span class="l l-Scalar l-Scalar-Plain">DerivePointerAlignment</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="l l-Scalar l-Scalar-Plain">PointerAlignment</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Left</span>
+<span class="nn">---</span>
+<span class="l l-Scalar l-Scalar-Plain">Language</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">JavaScript</span>
+<span class="c1"># Use 100 columns for JS.</span>
+<span class="l l-Scalar l-Scalar-Plain">ColumnLimit</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="nn">---</span>
+<span class="l l-Scalar l-Scalar-Plain">Language</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Proto</span>
+<span class="c1"># Don&#39;t format .proto files.</span>
+<span class="l l-Scalar l-Scalar-Plain">DisableFormat</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+<p>An easy way to get a valid <code class="docutils literal"><span class="pre">.clang-format</span></code> file containing all configuration
+options of a certain predefined style is:</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="go">clang-format -style=llvm -dump-config &gt; .clang-format</span>
+</pre></div>
+</div>
+<p>When specifying configuration in the <code class="docutils literal"><span class="pre">-style=</span></code> option, the same configuration
+is applied for all input files. The format of the configuration is:</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="go">-style=&#39;{key1: value1, key2: value2, ...}&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="disabling-formatting-on-a-piece-of-code">
+<h2>Disabling Formatting on a Piece of Code<a class="headerlink" href="#disabling-formatting-on-a-piece-of-code" title="Permalink to this headline">¶</a></h2>
+<p>Clang-format understands also special comments that switch formatting in a
+delimited range. The code between a comment <code class="docutils literal"><span class="pre">//</span> <span class="pre">clang-format</span> <span class="pre">off</span></code> or
+<code class="docutils literal"><span class="pre">/*</span> <span class="pre">clang-format</span> <span class="pre">off</span> <span class="pre">*/</span></code> up to a comment <code class="docutils literal"><span class="pre">//</span> <span class="pre">clang-format</span> <span class="pre">on</span></code> or
+<code class="docutils literal"><span class="pre">/*</span> <span class="pre">clang-format</span> <span class="pre">on</span> <span class="pre">*/</span></code> will not be formatted. The comments themselves
+will be formatted (aligned) normally.</p>
+<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">formatted_code</span><span class="p">;</span>
+<span class="c1">// clang-format off</span>
+    <span class="kt">void</span>    <span class="n">unformatted_code</span>  <span class="p">;</span>
+<span class="c1">// clang-format on</span>
+<span class="kt">void</span> <span class="n">formatted_code_again</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuring-style-in-code">
+<h2>Configuring Style in Code<a class="headerlink" href="#configuring-style-in-code" title="Permalink to this headline">¶</a></h2>
+<p>When using <code class="docutils literal"><span class="pre">clang::format::reformat(...)</span></code> functions, the format is specified
+by supplying the <a class="reference external" href="http://clang.llvm.org/doxygen/structclang_1_1format_1_1FormatStyle.html">clang::format::FormatStyle</a>
+structure.</p>
+</div>
+<div class="section" id="configurable-format-style-options">
+<h2>Configurable Format Style Options<a class="headerlink" href="#configurable-format-style-options" title="Permalink to this headline">¶</a></h2>
+<p>This section lists the supported style options. Value type is specified for
+each option. For enumeration types possible values are specified both as a C++
+enumeration member (with a prefix, e.g. <code class="docutils literal"><span class="pre">LS_Auto</span></code>), and as a value usable in
+the configuration (without a prefix: <code class="docutils literal"><span class="pre">Auto</span></code>).</p>
+<dl class="docutils">
+<dt><strong>BasedOnStyle</strong> (<code class="docutils literal"><span class="pre">string</span></code>)</dt>
+<dd><p class="first">The style used for all options not specifically set in the configuration.</p>
+<p>This option is supported only in the <strong class="program">clang-format</strong> configuration
+(both within <code class="docutils literal"><span class="pre">-style='{...}'</span></code> and the <code class="docutils literal"><span class="pre">.clang-format</span></code> file).</p>
+<p>Possible values:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">LLVM</span></code>
+A style complying with the <a class="reference external" href="http://llvm.org/docs/CodingStandards.html">LLVM coding standards</a></li>
+<li><code class="docutils literal"><span class="pre">Google</span></code>
+A style complying with <a class="reference external" href="http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml">Google&#8217;s C++ style guide</a></li>
+<li><code class="docutils literal"><span class="pre">Chromium</span></code>
+A style complying with <a class="reference external" href="http://www.chromium.org/developers/coding-style">Chromium&#8217;s style guide</a></li>
+<li><code class="docutils literal"><span class="pre">Mozilla</span></code>
+A style complying with <a class="reference external" href="https://developer.mozilla.org/en-US/docs/Developer_Guide/Coding_Style">Mozilla&#8217;s style guide</a></li>
+<li><code class="docutils literal"><span class="pre">WebKit</span></code>
+A style complying with <a class="reference external" href="http://www.webkit.org/coding/coding-style.html">WebKit&#8217;s style guide</a></li>
+</ul>
+</dd>
+</dl>
+<dl class="docutils">
+<dt><strong>AccessModifierOffset</strong> (<code class="docutils literal"><span class="pre">int</span></code>)</dt>
+<dd>The extra indent or outdent of access modifiers, e.g. <code class="docutils literal"><span class="pre">public:</span></code>.</dd>
+<dt><strong>AlignAfterOpenBracket</strong> (<code class="docutils literal"><span class="pre">BracketAlignmentStyle</span></code>)</dt>
+<dd><p class="first">If <code class="docutils literal"><span class="pre">true</span></code>, horizontally aligns arguments after an open bracket.</p>
+<p>This applies to round brackets (parentheses), angle brackets and square
+brackets.</p>
+<p>Possible values:</p>
+<ul class="last">
+<li><p class="first"><code class="docutils literal"><span class="pre">BAS_Align</span></code> (in configuration: <code class="docutils literal"><span class="pre">Align</span></code>)
+Align parameters on the open bracket, e.g.:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="n">someLongFunction</span><span class="p">(</span><span class="n">argument1</span><span class="p">,</span>
+                 <span class="n">argument2</span><span class="p">);</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">BAS_DontAlign</span></code> (in configuration: <code class="docutils literal"><span class="pre">DontAlign</span></code>)
+Don&#8217;t align, instead use <code class="docutils literal"><span class="pre">ContinuationIndentWidth</span></code>, e.g.:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="n">someLongFunction</span><span class="p">(</span><span class="n">argument1</span><span class="p">,</span>
+    <span class="n">argument2</span><span class="p">);</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">BAS_AlwaysBreak</span></code> (in configuration: <code class="docutils literal"><span class="pre">AlwaysBreak</span></code>)
+Always break after an open bracket, if the parameters don&#8217;t fit
+on a single line, e.g.:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="n">someLongFunction</span><span class="p">(</span>
+    <span class="n">argument1</span><span class="p">,</span> <span class="n">argument2</span><span class="p">);</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</dd>
+<dt><strong>AlignConsecutiveAssignments</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd><p class="first">If <code class="docutils literal"><span class="pre">true</span></code>, aligns consecutive assignments.</p>
+<p>This will align the assignment operators of consecutive lines. This
+will result in formattings like</p>
+<div class="last highlight-c++"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">aaaa</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">b</span>    <span class="o">=</span> <span class="mi">23</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">ccc</span>  <span class="o">=</span> <span class="mi">23</span><span class="p">;</span>
+</pre></div>
+</div>
+</dd>
+<dt><strong>AlignConsecutiveDeclarations</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd><p class="first">If <code class="docutils literal"><span class="pre">true</span></code>, aligns consecutive declarations.</p>
+<p>This will align the declaration names of consecutive lines. This
+will result in formattings like</p>
+<div class="last highlight-c++"><div class="highlight"><pre><span></span><span class="kt">int</span>         <span class="n">aaaa</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
+<span class="kt">float</span>       <span class="n">b</span> <span class="o">=</span> <span class="mi">23</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">ccc</span> <span class="o">=</span> <span class="mi">23</span><span class="p">;</span>
+</pre></div>
+</div>
+</dd>
+<dt><strong>AlignEscapedNewlinesLeft</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">true</span></code>, aligns escaped newlines as far left as possible.
+Otherwise puts them into the right-most column.</dd>
+<dt><strong>AlignOperands</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd><p class="first">If <code class="docutils literal"><span class="pre">true</span></code>, horizontally align operands of binary and ternary
+expressions.</p>
+<p>Specifically, this aligns operands of a single expression that needs to be
+split over multiple lines, e.g.:</p>
+<div class="last highlight-c++"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">aaa</span> <span class="o">=</span> <span class="n">bbbbbbbbbbbbbbb</span> <span class="o">+</span>
+          <span class="n">ccccccccccccccc</span><span class="p">;</span>
+</pre></div>
+</div>
+</dd>
+<dt><strong>AlignTrailingComments</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">true</span></code>, aligns trailing comments.</dd>
+<dt><strong>AllowAllParametersOfDeclarationOnNextLine</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>Allow putting all parameters of a function declaration onto
+the next line even if <code class="docutils literal"><span class="pre">BinPackParameters</span></code> is <code class="docutils literal"><span class="pre">false</span></code>.</dd>
+<dt><strong>AllowShortBlocksOnASingleLine</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd><p class="first">Allows contracting simple braced statements to a single line.</p>
+<p class="last">E.g., this allows <code class="docutils literal"><span class="pre">if</span> <span class="pre">(a)</span> <span class="pre">{</span> <span class="pre">return;</span> <span class="pre">}</span></code> to be put on a single line.</p>
+</dd>
+<dt><strong>AllowShortCaseLabelsOnASingleLine</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">true</span></code>, short case labels will be contracted to a single line.</dd>
+<dt><strong>AllowShortFunctionsOnASingleLine</strong> (<code class="docutils literal"><span class="pre">ShortFunctionStyle</span></code>)</dt>
+<dd><p class="first">Dependent on the value, <code class="docutils literal"><span class="pre">int</span> <span class="pre">f()</span> <span class="pre">{</span> <span class="pre">return</span> <span class="pre">0;</span> <span class="pre">}</span></code> can be put on a
+single line.</p>
+<p>Possible values:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">SFS_None</span></code> (in configuration: <code class="docutils literal"><span class="pre">None</span></code>)
+Never merge functions into a single line.</li>
+<li><code class="docutils literal"><span class="pre">SFS_Empty</span></code> (in configuration: <code class="docutils literal"><span class="pre">Empty</span></code>)
+Only merge empty functions.</li>
+<li><code class="docutils literal"><span class="pre">SFS_Inline</span></code> (in configuration: <code class="docutils literal"><span class="pre">Inline</span></code>)
+Only merge functions defined inside a class. Implies &#8220;empty&#8221;.</li>
+<li><code class="docutils literal"><span class="pre">SFS_All</span></code> (in configuration: <code class="docutils literal"><span class="pre">All</span></code>)
+Merge all functions fitting on a single line.</li>
+</ul>
+</dd>
+<dt><strong>AllowShortIfStatementsOnASingleLine</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">true</span></code>, <code class="docutils literal"><span class="pre">if</span> <span class="pre">(a)</span> <span class="pre">return;</span></code> can be put on a single line.</dd>
+<dt><strong>AllowShortLoopsOnASingleLine</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">true</span></code>, <code class="docutils literal"><span class="pre">while</span> <span class="pre">(true)</span> <span class="pre">continue;</span></code> can be put on a single
+line.</dd>
+<dt><strong>AlwaysBreakAfterDefinitionReturnType</strong> (<code class="docutils literal"><span class="pre">DefinitionReturnTypeBreakingStyle</span></code>)</dt>
+<dd><p class="first">The function definition return type breaking style to use.  This
+option is deprecated and is retained for backwards compatibility.</p>
+<p>Possible values:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">DRTBS_None</span></code> (in configuration: <code class="docutils literal"><span class="pre">None</span></code>)
+Break after return type automatically.
+<code class="docutils literal"><span class="pre">PenaltyReturnTypeOnItsOwnLine</span></code> is taken into account.</li>
+<li><code class="docutils literal"><span class="pre">DRTBS_All</span></code> (in configuration: <code class="docutils literal"><span class="pre">All</span></code>)
+Always break after the return type.</li>
+<li><code class="docutils literal"><span class="pre">DRTBS_TopLevel</span></code> (in configuration: <code class="docutils literal"><span class="pre">TopLevel</span></code>)
+Always break after the return types of top-level functions.</li>
+</ul>
+</dd>
+<dt><strong>AlwaysBreakAfterReturnType</strong> (<code class="docutils literal"><span class="pre">ReturnTypeBreakingStyle</span></code>)</dt>
+<dd><p class="first">The function declaration return type breaking style to use.</p>
+<p>Possible values:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">RTBS_None</span></code> (in configuration: <code class="docutils literal"><span class="pre">None</span></code>)
+Break after return type automatically.
+<code class="docutils literal"><span class="pre">PenaltyReturnTypeOnItsOwnLine</span></code> is taken into account.</li>
+<li><code class="docutils literal"><span class="pre">RTBS_All</span></code> (in configuration: <code class="docutils literal"><span class="pre">All</span></code>)
+Always break after the return type.</li>
+<li><code class="docutils literal"><span class="pre">RTBS_TopLevel</span></code> (in configuration: <code class="docutils literal"><span class="pre">TopLevel</span></code>)
+Always break after the return types of top-level functions.</li>
+<li><code class="docutils literal"><span class="pre">RTBS_AllDefinitions</span></code> (in configuration: <code class="docutils literal"><span class="pre">AllDefinitions</span></code>)
+Always break after the return type of function definitions.</li>
+<li><code class="docutils literal"><span class="pre">RTBS_TopLevelDefinitions</span></code> (in configuration: <code class="docutils literal"><span class="pre">TopLevelDefinitions</span></code>)
+Always break after the return type of top-level definitions.</li>
+</ul>
+</dd>
+<dt><strong>AlwaysBreakBeforeMultilineStrings</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd><p class="first">If <code class="docutils literal"><span class="pre">true</span></code>, always break before multiline string literals.</p>
+<p class="last">This flag is mean to make cases where there are multiple multiline strings
+in a file look more consistent. Thus, it will only take effect if wrapping
+the string at that point leads to it being indented
+<code class="docutils literal"><span class="pre">ContinuationIndentWidth</span></code> spaces from the start of the line.</p>
+</dd>
+<dt><strong>AlwaysBreakTemplateDeclarations</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">true</span></code>, always break after the <code class="docutils literal"><span class="pre">template&lt;...&gt;</span></code> of a template
+declaration.</dd>
+<dt><strong>BinPackArguments</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">false</span></code>, a function call&#8217;s arguments will either be all on the
+same line or will have one line each.</dd>
+<dt><strong>BinPackParameters</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">false</span></code>, a function declaration&#8217;s or function definition&#8217;s
+parameters will either all be on the same line or will have one line each.</dd>
+<dt><strong>BraceWrapping</strong> (<code class="docutils literal"><span class="pre">BraceWrappingFlags</span></code>)</dt>
+<dd><p class="first">Control of individual brace wrapping cases.</p>
+<p>If <code class="docutils literal"><span class="pre">BreakBeforeBraces</span></code> is set to <code class="docutils literal"><span class="pre">BS_Custom</span></code>, use this to specify how
+each individual brace case should be handled. Otherwise, this is ignored.</p>
+<p>Nested configuration flags:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">bool</span> <span class="pre">AfterClass</span></code> Wrap class definitions.</li>
+<li><code class="docutils literal"><span class="pre">bool</span> <span class="pre">AfterControlStatement</span></code> Wrap control statements (<code class="docutils literal"><span class="pre">if</span></code>/<code class="docutils literal"><span class="pre">for</span></code>/<code class="docutils literal"><span class="pre">while</span></code>/<code class="docutils literal"><span class="pre">switch</span></code>/..).</li>
+<li><code class="docutils literal"><span class="pre">bool</span> <span class="pre">AfterEnum</span></code> Wrap enum definitions.</li>
+<li><code class="docutils literal"><span class="pre">bool</span> <span class="pre">AfterFunction</span></code> Wrap function definitions.</li>
+<li><code class="docutils literal"><span class="pre">bool</span> <span class="pre">AfterMultilineControlStatement</span></code> Wrap control statements that span over more than one line.</li>
+<li><code class="docutils literal"><span class="pre">bool</span> <span class="pre">AfterNamespace</span></code> Wrap namespace definitions.</li>
+<li><code class="docutils literal"><span class="pre">bool</span> <span class="pre">AfterObjCDeclaration</span></code> Wrap ObjC definitions (<code class="docutils literal"><span class="pre">&#64;autoreleasepool</span></code>, interfaces, ..).</li>
+<li><code class="docutils literal"><span class="pre">bool</span> <span class="pre">AfterStruct</span></code> Wrap struct definitions.</li>
+<li><code class="docutils literal"><span class="pre">bool</span> <span class="pre">AfterUnion</span></code> Wrap union definitions.</li>
+<li><code class="docutils literal"><span class="pre">bool</span> <span class="pre">BeforeCatch</span></code> Wrap before <code class="docutils literal"><span class="pre">catch</span></code>.</li>
+<li><code class="docutils literal"><span class="pre">bool</span> <span class="pre">BeforeElse</span></code> Wrap before <code class="docutils literal"><span class="pre">else</span></code>.</li>
+<li><code class="docutils literal"><span class="pre">bool</span> <span class="pre">IndentBraces</span></code> Indent the wrapped braces themselves.</li>
+</ul>
+</dd>
+<dt><strong>BreakAfterJavaFieldAnnotations</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>Break after each annotation on a field in Java files.</dd>
+<dt><strong>BreakBeforeBinaryOperators</strong> (<code class="docutils literal"><span class="pre">BinaryOperatorStyle</span></code>)</dt>
+<dd><p class="first">The way to wrap binary operators.</p>
+<p>Possible values:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">BOS_None</span></code> (in configuration: <code class="docutils literal"><span class="pre">None</span></code>)
+Break after operators.</li>
+<li><code class="docutils literal"><span class="pre">BOS_NonAssignment</span></code> (in configuration: <code class="docutils literal"><span class="pre">NonAssignment</span></code>)
+Break before operators that aren&#8217;t assignments.</li>
+<li><code class="docutils literal"><span class="pre">BOS_All</span></code> (in configuration: <code class="docutils literal"><span class="pre">All</span></code>)
+Break before operators.</li>
+</ul>
+</dd>
+<dt><strong>BreakBeforeBraces</strong> (<code class="docutils literal"><span class="pre">BraceBreakingStyle</span></code>)</dt>
+<dd><p class="first">The brace breaking style to use.</p>
+<p>Possible values:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">BS_Attach</span></code> (in configuration: <code class="docutils literal"><span class="pre">Attach</span></code>)
+Always attach braces to surrounding context.</li>
+<li><code class="docutils literal"><span class="pre">BS_Linux</span></code> (in configuration: <code class="docutils literal"><span class="pre">Linux</span></code>)
+Like <code class="docutils literal"><span class="pre">Attach</span></code>, but break before braces on function, namespace and
+class definitions.</li>
+<li><code class="docutils literal"><span class="pre">BS_Mozilla</span></code> (in configuration: <code class="docutils literal"><span class="pre">Mozilla</span></code>)
+Like <code class="docutils literal"><span class="pre">Attach</span></code>, but break before braces on enum, function, and record
+definitions.</li>
+<li><code class="docutils literal"><span class="pre">BS_Stroustrup</span></code> (in configuration: <code class="docutils literal"><span class="pre">Stroustrup</span></code>)
+Like <code class="docutils literal"><span class="pre">Attach</span></code>, but break before function definitions, <code class="docutils literal"><span class="pre">catch</span></code>, and
+<code class="docutils literal"><span class="pre">else</span></code>.</li>
+<li><code class="docutils literal"><span class="pre">BS_Allman</span></code> (in configuration: <code class="docutils literal"><span class="pre">Allman</span></code>)
+Always break before braces.</li>
+<li><code class="docutils literal"><span class="pre">BS_GNU</span></code> (in configuration: <code class="docutils literal"><span class="pre">GNU</span></code>)
+Always break before braces and add an extra level of indentation to
+braces of control statements, not to those of class, function
+or other definitions.</li>
+<li><code class="docutils literal"><span class="pre">BS_WebKit</span></code> (in configuration: <code class="docutils literal"><span class="pre">WebKit</span></code>)
+Like <code class="docutils literal"><span class="pre">Attach</span></code>, but break before functions.</li>
+<li><code class="docutils literal"><span class="pre">BS_Custom</span></code> (in configuration: <code class="docutils literal"><span class="pre">Custom</span></code>)
+Configure each individual brace in <cite>BraceWrapping</cite>.</li>
+</ul>
+</dd>
+<dt><strong>BreakBeforeTernaryOperators</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">true</span></code>, ternary operators will be placed after line breaks.</dd>
+<dt><strong>BreakConstructorInitializersBeforeComma</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>Always break constructor initializers before commas and align
+the commas with the colon.</dd>
+<dt><strong>BreakStringLiterals</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>Allow breaking string literals when formatting.</dd>
+<dt><strong>ColumnLimit</strong> (<code class="docutils literal"><span class="pre">unsigned</span></code>)</dt>
+<dd><p class="first">The column limit.</p>
+<p class="last">A column limit of <code class="docutils literal"><span class="pre">0</span></code> means that there is no column limit. In this case,
+clang-format will respect the input&#8217;s line breaking decisions within
+statements unless they contradict other rules.</p>
+</dd>
+<dt><strong>CommentPragmas</strong> (<code class="docutils literal"><span class="pre">std::string</span></code>)</dt>
+<dd>A regular expression that describes comments with special meaning,
+which should not be split into lines or otherwise changed.</dd>
+<dt><strong>ConstructorInitializerAllOnOneLineOrOnePerLine</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If the constructor initializers don&#8217;t fit on a line, put each
+initializer on its own line.</dd>
+<dt><strong>ConstructorInitializerIndentWidth</strong> (<code class="docutils literal"><span class="pre">unsigned</span></code>)</dt>
+<dd>The number of characters to use for indentation of constructor
+initializer lists.</dd>
+<dt><strong>ContinuationIndentWidth</strong> (<code class="docutils literal"><span class="pre">unsigned</span></code>)</dt>
+<dd>Indent width for line continuations.</dd>
+<dt><strong>Cpp11BracedListStyle</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd><p class="first">If <code class="docutils literal"><span class="pre">true</span></code>, format braced lists as best suited for C++11 braced
+lists.</p>
+<p>Important differences:
+- No spaces inside the braced list.
+- No line break before the closing brace.
+- Indentation with the continuation indent, not with the block indent.</p>
+<p class="last">Fundamentally, C++11 braced lists are formatted exactly like function
+calls would be formatted in their place. If the braced list follows a name
+(e.g. a type or variable name), clang-format formats as if the <code class="docutils literal"><span class="pre">{}</span></code> were
+the parentheses of a function call with that name. If there is no name,
+a zero-length name is assumed.</p>
+</dd>
+<dt><strong>DerivePointerAlignment</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">true</span></code>, analyze the formatted file for the most common
+alignment of <code class="docutils literal"><span class="pre">&amp;</span></code> and <code class="docutils literal"><span class="pre">\*</span></code>. <code class="docutils literal"><span class="pre">PointerAlignment</span></code> is then used only as
+fallback.</dd>
+<dt><strong>DisableFormat</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>Disables formatting completely.</dd>
+<dt><strong>ExperimentalAutoDetectBinPacking</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd><p class="first">If <code class="docutils literal"><span class="pre">true</span></code>, clang-format detects whether function calls and
+definitions are formatted with one parameter per line.</p>
+<p>Each call can be bin-packed, one-per-line or inconclusive. If it is
+inconclusive, e.g. completely on one line, but a decision needs to be
+made, clang-format analyzes whether there are other bin-packed cases in
+the input file and act accordingly.</p>
+<p class="last">NOTE: This is an experimental flag, that might go away or be renamed. Do
+not use this in config files, etc. Use at your own risk.</p>
+</dd>
+<dt><strong>ForEachMacros</strong> (<code class="docutils literal"><span class="pre">std::vector&lt;std::string&gt;</span></code>)</dt>
+<dd><p class="first">A vector of macros that should be interpreted as foreach loops
+instead of as function calls.</p>
+<p>These are expected to be macros of the form:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="n">FOREACH</span><span class="p">(</span><span class="o">&lt;</span><span class="n">variable</span><span class="o">-</span><span class="n">declaration</span><span class="o">&gt;</span><span class="p">,</span> <span class="p">...)</span>
+  <span class="o">&lt;</span><span class="n">loop</span><span class="o">-</span><span class="n">body</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>In the .clang-format configuration file, this can be configured like:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">ForEachMacros</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;RANGES_FOR&#39;</span><span class="p p-Indicator">,</span> <span class="s">&#39;FOREACH&#39;</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+<p class="last">For example: BOOST_FOREACH.</p>
+</dd>
+<dt><strong>IncludeCategories</strong> (<code class="docutils literal"><span class="pre">std::vector&lt;IncludeCategory&gt;</span></code>)</dt>
+<dd><p class="first">Regular expressions denoting the different <code class="docutils literal"><span class="pre">#include</span></code> categories
+used for ordering <code class="docutils literal"><span class="pre">#includes</span></code>.</p>
+<p>These regular expressions are matched against the filename of an include
+(including the &lt;&gt; or &#8220;&#8221;) in order. The value belonging to the first
+matching regular expression is assigned and <code class="docutils literal"><span class="pre">#includes</span></code> are sorted first
+according to increasing category number and then alphabetically within
+each category.</p>
+<p>If none of the regular expressions match, INT_MAX is assigned as
+category. The main header for a source file automatically gets category 0.
+so that it is generally kept at the beginning of the <code class="docutils literal"><span class="pre">#includes</span></code>
+(<a class="reference external" href="http://llvm.org/docs/CodingStandards.html#include-style">http://llvm.org/docs/CodingStandards.html#include-style</a>). However, you
+can also assign negative priorities if you have certain headers that
+always need to be first.</p>
+<p>To configure this in the .clang-format file, use:</p>
+<div class="last highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">IncludeCategories</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">Regex</span><span class="p p-Indicator">:</span>           <span class="s">&#39;^&quot;(llvm|llvm-c|clang|clang-c)/&#39;</span>
+    <span class="l l-Scalar l-Scalar-Plain">Priority</span><span class="p p-Indicator">:</span>        <span class="l l-Scalar l-Scalar-Plain">2</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">Regex</span><span class="p p-Indicator">:</span>           <span class="s">&#39;^(&lt;|&quot;(gtest|isl|json)/)&#39;</span>
+    <span class="l l-Scalar l-Scalar-Plain">Priority</span><span class="p p-Indicator">:</span>        <span class="l l-Scalar l-Scalar-Plain">3</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">Regex</span><span class="p p-Indicator">:</span>           <span class="s">&#39;.\*&#39;</span>
+    <span class="l l-Scalar l-Scalar-Plain">Priority</span><span class="p p-Indicator">:</span>        <span class="l l-Scalar l-Scalar-Plain">1</span>
+</pre></div>
+</div>
+</dd>
+<dt><strong>IncludeIsMainRegex</strong> (<code class="docutils literal"><span class="pre">std::string</span></code>)</dt>
+<dd><p class="first">Specify a regular expression of suffixes that are allowed in the
+file-to-main-include mapping.</p>
+<p>When guessing whether a #include is the &#8220;main&#8221; include (to assign
+category 0, see above), use this regex of allowed suffixes to the header
+stem. A partial match is done, so that:
+- &#8220;&#8221; means &#8220;arbitrary suffix&#8221;
+- &#8220;$&#8221; means &#8220;no suffix&#8221;</p>
+<p class="last">For example, if configured to &#8220;(_test)?$&#8221;, then a header a.h would be seen
+as the &#8220;main&#8221; include in both a.cc and a_test.cc.</p>
+</dd>
+<dt><strong>IndentCaseLabels</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd><p class="first">Indent case labels one level from the switch statement.</p>
+<p class="last">When <code class="docutils literal"><span class="pre">false</span></code>, use the same indentation level as for the switch statement.
+Switch statement body is always indented one level more than case labels.</p>
+</dd>
+<dt><strong>IndentWidth</strong> (<code class="docutils literal"><span class="pre">unsigned</span></code>)</dt>
+<dd>The number of columns to use for indentation.</dd>
+<dt><strong>IndentWrappedFunctionNames</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>Indent if a function definition or declaration is wrapped after the
+type.</dd>
+<dt><strong>JavaScriptQuotes</strong> (<code class="docutils literal"><span class="pre">JavaScriptQuoteStyle</span></code>)</dt>
+<dd><p class="first">The JavaScriptQuoteStyle to use for JavaScript strings.</p>
+<p>Possible values:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">JSQS_Leave</span></code> (in configuration: <code class="docutils literal"><span class="pre">Leave</span></code>)
+Leave string quotes as they are.</li>
+<li><code class="docutils literal"><span class="pre">JSQS_Single</span></code> (in configuration: <code class="docutils literal"><span class="pre">Single</span></code>)
+Always use single quotes.</li>
+<li><code class="docutils literal"><span class="pre">JSQS_Double</span></code> (in configuration: <code class="docutils literal"><span class="pre">Double</span></code>)
+Always use double quotes.</li>
+</ul>
+</dd>
+<dt><strong>KeepEmptyLinesAtTheStartOfBlocks</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If true, empty lines at the start of blocks are kept.</dd>
+<dt><strong>Language</strong> (<code class="docutils literal"><span class="pre">LanguageKind</span></code>)</dt>
+<dd><p class="first">Language, this format style is targeted at.</p>
+<p>Possible values:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">LK_None</span></code> (in configuration: <code class="docutils literal"><span class="pre">None</span></code>)
+Do not use.</li>
+<li><code class="docutils literal"><span class="pre">LK_Cpp</span></code> (in configuration: <code class="docutils literal"><span class="pre">Cpp</span></code>)
+Should be used for C, C++, ObjectiveC, ObjectiveC++.</li>
+<li><code class="docutils literal"><span class="pre">LK_Java</span></code> (in configuration: <code class="docutils literal"><span class="pre">Java</span></code>)
+Should be used for Java.</li>
+<li><code class="docutils literal"><span class="pre">LK_JavaScript</span></code> (in configuration: <code class="docutils literal"><span class="pre">JavaScript</span></code>)
+Should be used for JavaScript.</li>
+<li><code class="docutils literal"><span class="pre">LK_Proto</span></code> (in configuration: <code class="docutils literal"><span class="pre">Proto</span></code>)
+Should be used for Protocol Buffers
+(<a class="reference external" href="https://developers.google.com/protocol-buffers/">https://developers.google.com/protocol-buffers/</a>).</li>
+<li><code class="docutils literal"><span class="pre">LK_TableGen</span></code> (in configuration: <code class="docutils literal"><span class="pre">TableGen</span></code>)
+Should be used for TableGen code.</li>
+</ul>
+</dd>
+<dt><strong>MacroBlockBegin</strong> (<code class="docutils literal"><span class="pre">std::string</span></code>)</dt>
+<dd>A regular expression matching macros that start a block.</dd>
+<dt><strong>MacroBlockEnd</strong> (<code class="docutils literal"><span class="pre">std::string</span></code>)</dt>
+<dd>A regular expression matching macros that end a block.</dd>
+<dt><strong>MaxEmptyLinesToKeep</strong> (<code class="docutils literal"><span class="pre">unsigned</span></code>)</dt>
+<dd>The maximum number of consecutive empty lines to keep.</dd>
+<dt><strong>NamespaceIndentation</strong> (<code class="docutils literal"><span class="pre">NamespaceIndentationKind</span></code>)</dt>
+<dd><p class="first">The indentation used for namespaces.</p>
+<p>Possible values:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">NI_None</span></code> (in configuration: <code class="docutils literal"><span class="pre">None</span></code>)
+Don&#8217;t indent in namespaces.</li>
+<li><code class="docutils literal"><span class="pre">NI_Inner</span></code> (in configuration: <code class="docutils literal"><span class="pre">Inner</span></code>)
+Indent only in inner namespaces (nested in other namespaces).</li>
+<li><code class="docutils literal"><span class="pre">NI_All</span></code> (in configuration: <code class="docutils literal"><span class="pre">All</span></code>)
+Indent in all namespaces.</li>
+</ul>
+</dd>
+<dt><strong>ObjCBlockIndentWidth</strong> (<code class="docutils literal"><span class="pre">unsigned</span></code>)</dt>
+<dd>The number of characters to use for indentation of ObjC blocks.</dd>
+<dt><strong>ObjCSpaceAfterProperty</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>Add a space after <code class="docutils literal"><span class="pre">&#64;property</span></code> in Objective-C, i.e. use
+<code class="docutils literal"><span class="pre">&#64;property</span> <span class="pre">(readonly)</span></code> instead of <code class="docutils literal"><span class="pre">&#64;property(readonly)</span></code>.</dd>
+<dt><strong>ObjCSpaceBeforeProtocolList</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>Add a space in front of an Objective-C protocol list, i.e. use
+<code class="docutils literal"><span class="pre">Foo</span> <span class="pre">&lt;Protocol&gt;</span></code> instead of <code class="docutils literal"><span class="pre">Foo&lt;Protocol&gt;</span></code>.</dd>
+<dt><strong>PenaltyBreakBeforeFirstCallParameter</strong> (<code class="docutils literal"><span class="pre">unsigned</span></code>)</dt>
+<dd>The penalty for breaking a function call after <code class="docutils literal"><span class="pre">call(</span></code>.</dd>
+<dt><strong>PenaltyBreakComment</strong> (<code class="docutils literal"><span class="pre">unsigned</span></code>)</dt>
+<dd>The penalty for each line break introduced inside a comment.</dd>
+<dt><strong>PenaltyBreakFirstLessLess</strong> (<code class="docutils literal"><span class="pre">unsigned</span></code>)</dt>
+<dd>The penalty for breaking before the first <code class="docutils literal"><span class="pre">&lt;&lt;</span></code>.</dd>
+<dt><strong>PenaltyBreakString</strong> (<code class="docutils literal"><span class="pre">unsigned</span></code>)</dt>
+<dd>The penalty for each line break introduced inside a string literal.</dd>
+<dt><strong>PenaltyExcessCharacter</strong> (<code class="docutils literal"><span class="pre">unsigned</span></code>)</dt>
+<dd>The penalty for each character outside of the column limit.</dd>
+<dt><strong>PenaltyReturnTypeOnItsOwnLine</strong> (<code class="docutils literal"><span class="pre">unsigned</span></code>)</dt>
+<dd>Penalty for putting the return type of a function onto its own
+line.</dd>
+<dt><strong>PointerAlignment</strong> (<code class="docutils literal"><span class="pre">PointerAlignmentStyle</span></code>)</dt>
+<dd><p class="first">Pointer and reference alignment style.</p>
+<p>Possible values:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">PAS_Left</span></code> (in configuration: <code class="docutils literal"><span class="pre">Left</span></code>)
+Align pointer to the left.</li>
+<li><code class="docutils literal"><span class="pre">PAS_Right</span></code> (in configuration: <code class="docutils literal"><span class="pre">Right</span></code>)
+Align pointer to the right.</li>
+<li><code class="docutils literal"><span class="pre">PAS_Middle</span></code> (in configuration: <code class="docutils literal"><span class="pre">Middle</span></code>)
+Align pointer in the middle.</li>
+</ul>
+</dd>
+<dt><strong>ReflowComments</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">true</span></code>, clang-format will attempt to re-flow comments.</dd>
+<dt><strong>SortIncludes</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">true</span></code>, clang-format will sort <code class="docutils literal"><span class="pre">#includes</span></code>.</dd>
+<dt><strong>SpaceAfterCStyleCast</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">true</span></code>, a space may be inserted after C style casts.</dd>
+<dt><strong>SpaceBeforeAssignmentOperators</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">false</span></code>, spaces will be removed before assignment operators.</dd>
+<dt><strong>SpaceBeforeParens</strong> (<code class="docutils literal"><span class="pre">SpaceBeforeParensOptions</span></code>)</dt>
+<dd><p class="first">Defines in which cases to put a space before opening parentheses.</p>
+<p>Possible values:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">SBPO_Never</span></code> (in configuration: <code class="docutils literal"><span class="pre">Never</span></code>)
+Never put a space before opening parentheses.</li>
+<li><code class="docutils literal"><span class="pre">SBPO_ControlStatements</span></code> (in configuration: <code class="docutils literal"><span class="pre">ControlStatements</span></code>)
+Put a space before opening parentheses only after control statement
+keywords (<code class="docutils literal"><span class="pre">for/if/while...</span></code>).</li>
+<li><code class="docutils literal"><span class="pre">SBPO_Always</span></code> (in configuration: <code class="docutils literal"><span class="pre">Always</span></code>)
+Always put a space before opening parentheses, except when it&#8217;s
+prohibited by the syntax rules (in function-like macro definitions) or
+when determined by other style rules (after unary operators, opening
+parentheses, etc.)</li>
+</ul>
+</dd>
+<dt><strong>SpaceInEmptyParentheses</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">true</span></code>, spaces may be inserted into <code class="docutils literal"><span class="pre">()</span></code>.</dd>
+<dt><strong>SpacesBeforeTrailingComments</strong> (<code class="docutils literal"><span class="pre">unsigned</span></code>)</dt>
+<dd><p class="first">The number of spaces before trailing line comments
+(<code class="docutils literal"><span class="pre">//</span></code> - comments).</p>
+<p class="last">This does not affect trailing block comments (<code class="docutils literal"><span class="pre">/*</span></code> - comments) as
+those commonly have different usage patterns and a number of special
+cases.</p>
+</dd>
+<dt><strong>SpacesInAngles</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">true</span></code>, spaces will be inserted after <code class="docutils literal"><span class="pre">&lt;</span></code> and before <code class="docutils literal"><span class="pre">&gt;</span></code>
+in template argument lists.</dd>
+<dt><strong>SpacesInCStyleCastParentheses</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">true</span></code>, spaces may be inserted into C style casts.</dd>
+<dt><strong>SpacesInContainerLiterals</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">true</span></code>, spaces are inserted inside container literals (e.g.
+ObjC and Javascript array and dict literals).</dd>
+<dt><strong>SpacesInParentheses</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">true</span></code>, spaces will be inserted after <code class="docutils literal"><span class="pre">(</span></code> and before <code class="docutils literal"><span class="pre">)</span></code>.</dd>
+<dt><strong>SpacesInSquareBrackets</strong> (<code class="docutils literal"><span class="pre">bool</span></code>)</dt>
+<dd>If <code class="docutils literal"><span class="pre">true</span></code>, spaces will be inserted after <code class="docutils literal"><span class="pre">[</span></code> and before <code class="docutils literal"><span class="pre">]</span></code>.</dd>
+<dt><strong>Standard</strong> (<code class="docutils literal"><span class="pre">LanguageStandard</span></code>)</dt>
+<dd><p class="first">Format compatible with this standard, e.g. use <code class="docutils literal"><span class="pre">A&lt;A&lt;int&gt;</span> <span class="pre">&gt;</span></code>
+instead of <code class="docutils literal"><span class="pre">A&lt;A&lt;int&gt;&gt;</span></code> for <code class="docutils literal"><span class="pre">LS_Cpp03</span></code>.</p>
+<p>Possible values:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">LS_Cpp03</span></code> (in configuration: <code class="docutils literal"><span class="pre">Cpp03</span></code>)
+Use C++03-compatible syntax.</li>
+<li><code class="docutils literal"><span class="pre">LS_Cpp11</span></code> (in configuration: <code class="docutils literal"><span class="pre">Cpp11</span></code>)
+Use features of C++11 (e.g. <code class="docutils literal"><span class="pre">A&lt;A&lt;int&gt;&gt;</span></code> instead of <code class="docutils literal"><span class="pre">A&lt;A&lt;int&gt;</span> <span class="pre">&gt;</span></code>).</li>
+<li><code class="docutils literal"><span class="pre">LS_Auto</span></code> (in configuration: <code class="docutils literal"><span class="pre">Auto</span></code>)
+Automatic detection based on the input.</li>
+</ul>
+</dd>
+<dt><strong>TabWidth</strong> (<code class="docutils literal"><span class="pre">unsigned</span></code>)</dt>
+<dd>The number of columns used for tab stops.</dd>
+<dt><strong>UseTab</strong> (<code class="docutils literal"><span class="pre">UseTabStyle</span></code>)</dt>
+<dd><p class="first">The way to use tab characters in the resulting file.</p>
+<p>Possible values:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">UT_Never</span></code> (in configuration: <code class="docutils literal"><span class="pre">Never</span></code>)
+Never use tab.</li>
+<li><code class="docutils literal"><span class="pre">UT_ForIndentation</span></code> (in configuration: <code class="docutils literal"><span class="pre">ForIndentation</span></code>)
+Use tabs only for indentation.</li>
+<li><code class="docutils literal"><span class="pre">UT_Always</span></code> (in configuration: <code class="docutils literal"><span class="pre">Always</span></code>)
+Use tabs whenever we need to fill whitespace that spans at least from
+one tab stop to the next one.</li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="adding-additional-style-options">
+<h2>Adding additional style options<a class="headerlink" href="#adding-additional-style-options" title="Permalink to this headline">¶</a></h2>
+<p>Each additional style option adds costs to the clang-format project. Some of
+these costs affect the clang-format development itself, as we need to make
+sure that any given combination of options work and that new features don&#8217;t
+break any of the existing options in any way. There are also costs for end users
+as options become less discoverable and people have to think about and make a
+decision on options they don&#8217;t really care about.</p>
+<p>The goal of the clang-format project is more on the side of supporting a
+limited set of styles really well as opposed to supporting every single style
+used by a codebase somewhere in the wild. Of course, we do want to support all
+major projects and thus have established the following bar for adding style
+options. Each new style option must ..</p>
+<blockquote>
+<div><ul class="simple">
+<li>be used in a project of significant size (have dozens of contributors)</li>
+<li>have a publicly accessible style guide</li>
+<li>have a person willing to contribute and maintain patches</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>A style similar to the <a class="reference external" href="https://www.kernel.org/doc/Documentation/CodingStyle">Linux Kernel style</a>:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">BasedOnStyle</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">LLVM</span>
+<span class="l l-Scalar l-Scalar-Plain">IndentWidth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="l l-Scalar l-Scalar-Plain">UseTab</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Always</span>
+<span class="l l-Scalar l-Scalar-Plain">BreakBeforeBraces</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Linux</span>
+<span class="l l-Scalar l-Scalar-Plain">AllowShortIfStatementsOnASingleLine</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="l l-Scalar l-Scalar-Plain">IndentCaseLabels</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+</pre></div>
+</div>
+<p>The result is (imagine that tabs are used for indentation here):</p>
+<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span>
+<span class="p">{</span>
+        <span class="k">switch</span> <span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">case</span> <span class="mi">0</span><span class="o">:</span>
+        <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
+                <span class="n">do_something</span><span class="p">();</span>
+                <span class="k">break</span><span class="p">;</span>
+        <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
+                <span class="n">do_something_else</span><span class="p">();</span>
+                <span class="k">break</span><span class="p">;</span>
+        <span class="k">default</span><span class="o">:</span>
+                <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">condition</span><span class="p">)</span>
+                <span class="n">do_something_completely_different</span><span class="p">();</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="n">y</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">q</span><span class="p">();</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="n">y</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">w</span><span class="p">();</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="n">r</span><span class="p">();</span>
+        <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A style similar to the default Visual Studio formatting style:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">UseTab</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Never</span>
+<span class="l l-Scalar l-Scalar-Plain">IndentWidth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">4</span>
+<span class="l l-Scalar l-Scalar-Plain">BreakBeforeBraces</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Allman</span>
+<span class="l l-Scalar l-Scalar-Plain">AllowShortIfStatementsOnASingleLine</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="l l-Scalar l-Scalar-Plain">IndentCaseLabels</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="l l-Scalar l-Scalar-Plain">ColumnLimit</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+</pre></div>
+</div>
+<p>The result is:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="n">suffix</span><span class="p">)</span>
+    <span class="p">{</span>
+    <span class="k">case</span> <span class="mi">0</span><span class="o">:</span>
+    <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
+        <span class="n">do_something</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
+        <span class="n">do_something_else</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="k">default</span><span class="o">:</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">condition</span><span class="p">)</span>
+        <span class="n">do_somthing_completely_different</span><span class="p">();</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="n">y</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">q</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="n">y</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">w</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="n">r</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="ClangFormat.html">ClangFormat</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="InternalsManual.html">&#8220;Clang&#8221; CFE Internals Manual</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2007-2016, The Clang Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.
+    </div>
+  </body>
+</html>
