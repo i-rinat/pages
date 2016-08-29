@@ -43,7 +43,8 @@
             noExitRuntime: true,
             printErr: function(msg) {
                 stderr += msg + "\n";
-            }
+            },
+            TOTAL_MEMORY: 128 * 1024 * 1024
         };
     </script>
     <script src="interact.js/interact.min.js"></script>
@@ -83,7 +84,13 @@
             var old_content = content_elem.editor.getValue();
             var old_cursor_position = content_elem.editor.getCursorPosition();
             var style = style_elem.editor.getValue() || "";
-            var new_content = Module.clang_format_string(style, old_content);
+
+            try {
+                var new_content = Module.clang_format_string(style, old_content);
+            } catch (err) {
+                $.notify("clang_format_string thrown an exception. " +
+                         "Try to preallocate more memory", "error");
+            }
 
             content_elem.editor.setValue(new_content, -1);
             content_elem.editor.moveCursorToPosition(old_cursor_position);
