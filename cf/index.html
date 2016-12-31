@@ -104,6 +104,14 @@
                 // ignore
             }
 
+            // try to set correct tab size
+            try {
+                var doc = jsyaml.load(style)
+                var tabWidth = doc.TabWidth;
+                content_elem.editor.session.setTabSize(tabWidth);
+            } catch (err) { // ignore
+            }
+
             if (stderr != "") {
                 $.notify(stderr, "error");
             }
